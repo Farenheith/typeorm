@@ -54,6 +54,9 @@ Different RDBMS-es have their own specific options.
   Be careful with this option and don't use this in production - otherwise you'll lose all production data.
   This option is useful during debug and development.
 
+- `omitSchema` - Omits schema qualifiers from generated SQL (runtime queries, migrations, and schema sync operations).
+  When enabled, schema selection must be handled by the database/session configuration (for example, PostgreSQL `search_path`).
+
 - `synchronize` - Indicates if database schema should be auto created on every application launch.
   Be careful with this option and don't use this in production - otherwise you can lose production data.
   This option is useful during debug and development.

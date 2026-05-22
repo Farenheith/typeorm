@@ -423,7 +423,9 @@ export class PostgresDriver implements Driver {
             await queryRunner.release()
         }
 
-        this.schema ??= this.searchSchema
+        if (!this.options.omitSchema) {
+            this.schema ??= this.searchSchema
+        }
     }
 
     /**
@@ -1075,7 +1077,7 @@ export class PostgresDriver implements Driver {
     buildTableName(tableName: string, schema?: string): string {
         const tablePath = [tableName]
 
-        if (schema) {
+        if (schema && !this.options.omitSchema) {
             tablePath.unshift(schema)
         }
 
@@ -1091,14 +1093,16 @@ export class PostgresDriver implements Driver {
         target: EntityMetadata | Table | View | TableForeignKey | string,
     ): { database?: string; schema?: string; tableName: string } {
         const driverDatabase = this.database
-        const driverSchema = this.schema
+        const driverSchema = this.options.omitSchema ? undefined : this.schema
 
         if (InstanceChecker.isTable(target) || InstanceChecker.isView(target)) {
             const parsed = this.parseTableName(target.name)
 
             return {
                 database: target.database ?? parsed.database ?? driverDatabase,
-                schema: target.schema ?? parsed.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.schema ?? parsed.schema ?? driverSchema),
                 tableName: parsed.tableName,
             }
         }
@@ -1111,8 +1115,11 @@ export class PostgresDriver implements Driver {
                     target.referencedDatabase ??
                     parsed.database ??
                     driverDatabase,
-                schema:
-                    target.referencedSchema ?? parsed.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.referencedSchema ??
+                      parsed.schema ??
+                      driverSchema),
                 tableName: parsed.tableName,
             }
         }
@@ -1122,7 +1129,9 @@ export class PostgresDriver implements Driver {
 
             return {
                 database: target.database ?? driverDatabase,
-                schema: target.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.schema ?? driverSchema),
                 tableName: target.tableName,
             }
         }
@@ -1131,7 +1140,9 @@ export class PostgresDriver implements Driver {
 
         return {
             database: driverDatabase,
-            schema: (parts.length > 1 ? parts[0] : undefined) ?? driverSchema,
+            schema: this.options.omitSchema
+                ? undefined
+                : ((parts.length > 1 ? parts[0] : undefined) ?? driverSchema),
             tableName: parts.length > 1 ? parts[1] : parts[0],
         }
     }
