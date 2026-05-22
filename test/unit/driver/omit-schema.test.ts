@@ -9,7 +9,7 @@ type DriverWithSchema = {
     options: { omitSchema?: boolean }
     database?: string
     schema?: string
-    buildTableName: (...args: any[]) => string
+    buildTableName: (...args: unknown[]) => string
     parseTableName: (target: string) => {
         database?: string
         schema?: string
@@ -46,6 +46,13 @@ describe("driver > omitSchema", () => {
                     )
                 })
 
+                it("should include schema in buildTableName when omitSchema is disabled", () => {
+                    setupDriver(driver, false)
+                    expect(driver.buildTableName("user", "public")).to.equal(
+                        "public.user",
+                    )
+                })
+
                 it("should omit schema in parseTableName when omitSchema is enabled", () => {
                     setupDriver(driver, true)
                     expect(driver.parseTableName("public.user")).to.deep.equal({
@@ -79,6 +86,13 @@ describe("driver > omitSchema", () => {
             )
         })
 
+        it("should include schema in buildTableName when omitSchema is disabled", () => {
+            setupDriver(driver, false)
+            expect(driver.buildTableName("user", "dbo", "test_db")).to.equal(
+                "test_db.dbo.user",
+            )
+        })
+
         it("should omit schema in parseTableName when omitSchema is enabled", () => {
             setupDriver(driver, true)
             expect(driver.parseTableName("test_db.dbo.user")).to.deep.equal({
@@ -97,6 +111,13 @@ describe("driver > omitSchema", () => {
         it("should omit schema in buildTableName when omitSchema is enabled", () => {
             setupDriver(driver, true)
             expect(driver.buildTableName("user", "public")).to.equal("user")
+        })
+
+        it("should include schema in buildTableName when omitSchema is disabled", () => {
+            setupDriver(driver, false)
+            expect(driver.buildTableName("user", "public")).to.equal(
+                "public.user",
+            )
         })
 
         it("should omit schema in parseTableName when omitSchema is enabled", () => {
