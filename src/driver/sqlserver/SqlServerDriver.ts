@@ -348,7 +348,9 @@ export class SqlServerDriver implements Driver {
             await queryRunner.release()
         }
 
-        this.schema ??= this.searchSchema
+        if (!this.options.omitSchema) {
+            this.schema ??= this.searchSchema
+        }
     }
 
     /**
@@ -474,13 +476,14 @@ export class SqlServerDriver implements Driver {
         database?: string,
     ): string {
         const tablePath = [tableName]
+        const schemaToUse = this.options.omitSchema ? undefined : schema
 
-        if (schema) {
-            tablePath.unshift(schema)
+        if (schemaToUse) {
+            tablePath.unshift(schemaToUse)
         }
 
         if (database) {
-            if (!schema) {
+            if (!schemaToUse) {
                 tablePath.unshift("")
             }
 
@@ -499,14 +502,16 @@ export class SqlServerDriver implements Driver {
         target: EntityMetadata | Table | View | TableForeignKey | string,
     ): { database?: string; schema?: string; tableName: string } {
         const driverDatabase = this.database
-        const driverSchema = this.schema
+        const driverSchema = this.options.omitSchema ? undefined : this.schema
 
         if (InstanceChecker.isTable(target) || InstanceChecker.isView(target)) {
             const parsed = this.parseTableName(target.name)
 
             return {
                 database: target.database ?? parsed.database ?? driverDatabase,
-                schema: target.schema ?? parsed.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.schema ?? parsed.schema ?? driverSchema),
                 tableName: parsed.tableName,
             }
         }
@@ -519,8 +524,11 @@ export class SqlServerDriver implements Driver {
                     target.referencedDatabase ??
                     parsed.database ??
                     driverDatabase,
-                schema:
-                    target.referencedSchema ?? parsed.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.referencedSchema ??
+                      parsed.schema ??
+                      driverSchema),
                 tableName: parsed.tableName,
             }
         }
@@ -530,7 +538,9 @@ export class SqlServerDriver implements Driver {
 
             return {
                 database: target.database ?? driverDatabase,
-                schema: target.schema ?? driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : (target.schema ?? driverSchema),
                 tableName: target.tableName,
             }
         }
@@ -540,19 +550,21 @@ export class SqlServerDriver implements Driver {
         if (parts.length === 3) {
             return {
                 database: parts[0] || driverDatabase,
-                schema: parts[1] || driverSchema,
+                schema: this.options.omitSchema
+                    ? undefined
+                    : parts[1] || driverSchema,
                 tableName: parts[2],
             }
         } else if (parts.length === 2) {
             return {
                 database: driverDatabase,
-                schema: parts[0],
+                schema: this.options.omitSchema ? undefined : parts[0],
                 tableName: parts[1],
             }
         } else {
             return {
                 database: driverDatabase,
-                schema: driverSchema,
+                schema: this.options.omitSchema ? undefined : driverSchema,
                 tableName: target,
             }
         }

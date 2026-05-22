@@ -123,6 +123,11 @@ export interface BaseDataSourceOptions {
     readonly entityPrefix?: string
 
     /**
+     * Indicates if schema qualifiers should be omitted from all generated queries.
+     */
+    readonly omitSchema?: boolean
+
+    /**
      * When creating new Entity instances, skip all constructors when true.
      */
     readonly entitySkipConstructor?: boolean
