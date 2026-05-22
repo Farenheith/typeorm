@@ -70,6 +70,17 @@ describe("driver > omitSchema", () => {
                         tableName: "user",
                     })
                 })
+
+                it("should preserve explicit schema in parseTableName when omitSchema is disabled", () => {
+                    setupDriver(driver, false)
+                    expect(
+                        driver.parseTableName("custom_schema.user"),
+                    ).to.deep.equal({
+                        database: "test_db",
+                        schema: "custom_schema",
+                        tableName: "user",
+                    })
+                })
             })
         }
     })
@@ -101,6 +112,15 @@ describe("driver > omitSchema", () => {
                 tableName: "user",
             })
         })
+
+        it("should preserve schema in parseTableName when omitSchema is disabled", () => {
+            setupDriver(driver, false)
+            expect(driver.parseTableName("test_db.dbo.user")).to.deep.equal({
+                database: "test_db",
+                schema: "dbo",
+                tableName: "user",
+            })
+        })
     })
 
     describe("oracle driver", () => {
@@ -125,6 +145,15 @@ describe("driver > omitSchema", () => {
             expect(driver.parseTableName("public.user")).to.deep.equal({
                 database: "test_db",
                 schema: undefined,
+                tableName: "user",
+            })
+        })
+
+        it("should preserve schema in parseTableName when omitSchema is disabled", () => {
+            setupDriver(driver, false)
+            expect(driver.parseTableName("public.user")).to.deep.equal({
+                database: "test_db",
+                schema: "public",
                 tableName: "user",
             })
         })
